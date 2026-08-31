@@ -1,6 +1,8 @@
 import Ticket from '../models/Ticket.js';
 import Department from '../models/Department.js';
+import User from '../models/User.js';
 import { logAction } from '../services/auditService.js';
+import { notifyUser } from '../services/notificationService.js';
 
 export const createTicket = async (req, res) => {
   try {
@@ -17,12 +19,18 @@ export const createTicket = async (req, res) => {
       student: req.user._id,
       status: 'submitted'
     });
-    // Log ticket creation
     await logAction({
       actor: req.user._id,
       action: 'TICKET_CREATED',
       targetTicket: ticket._id,
       details: { ticketType, category }
+    });
+    // Notify student
+    await notifyUser({
+      recipient: req.user,
+      ticket: ticket._id,
+      message: `Your ticket ${ticketNumber} has been submitted successfully.`,
+      emailSubject: 'Ticket Submitted'
     });
     res.status(201).json({ success: true, data: ticket });
   } catch (error) {
@@ -102,7 +110,6 @@ export const updateTicketStatus = async (req, res) => {
       ticket.assignedTo = assignedTo;
     }
     await ticket.save();
-    // Log status change
     if (status && status !== oldStatus) {
       await logAction({
         actor: req.user._id,
@@ -110,6 +117,16 @@ export const updateTicketStatus = async (req, res) => {
         targetTicket: ticket._id,
         details: { from: oldStatus, to: status }
       });
+      // Notify student
+      const student = await User.findById(ticket.student);
+      if (student) {
+        await notifyUser({
+          recipient: student,
+          ticket: ticket._id,
+          message: `Your ticket ${ticket.ticketNumber} status changed from ${oldStatus} to ${status}`,
+          emailSubject: 'Ticket Status Update'
+        });
+      }
     }
     if (assignedTo && assignedTo !== oldAssigned?.toString()) {
       await logAction({
