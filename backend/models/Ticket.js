@@ -30,27 +30,13 @@ const ticketSchema = new mongoose.Schema({
   resolutionTime: Number
 }, { timestamps: true });
 
-// Generate ticket number before save
-ticketSchema.pre('save', function(next) {
-  if (!this.ticketNumber) {
-    const prefix = this.ticketType === 'complaint' ? 'CMP' : 'SRV';
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    this.ticketNumber = `${prefix}-${timestamp}-${random}`;
-  }
-  if (this.status === 'resolved' && !this.resolvedAt) {
-    this.resolvedAt = new Date();
-    this.resolutionTime = Math.round((this.resolvedAt - this.createdAt) / (1000 * 60 * 60));
-  }
-  next();
-});
-
-// Virtual populate for comments
-ticketSchema.virtual('comments', {
-  ref: 'TicketComment',
-  localField: '_id',
-  foreignField: 'ticket'
-});
+// Static method to generate ticket number
+ticketSchema.statics.generateTicketNumber = function(ticketType) {
+  const prefix = ticketType === 'complaint' ? 'CMP' : 'SRV';
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${prefix}-${timestamp}-${random}`;
+};
 
 const Ticket = mongoose.model('Ticket', ticketSchema);
 export default Ticket;

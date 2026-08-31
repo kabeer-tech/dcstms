@@ -1,11 +1,15 @@
 import Ticket from '../models/Ticket.js';
+import Department from '../models/Department.js'; // <-- Add this line
 
 // Create a new ticket
 export const createTicket = async (req, res) => {
   try {
     const { ticketType, category, description, department, priority, isAnonymous } = req.body;
     
+    const ticketNumber = Ticket.generateTicketNumber(ticketType);
+    
     const ticket = await Ticket.create({
+      ticketNumber,
       ticketType,
       category,
       description,
@@ -29,13 +33,11 @@ export const getTickets = async (req, res) => {
     const { type, status, category, page = 1, limit = 10 } = req.query;
     const query = {};
     
-    // Role-based filtering
     if (req.user.role === 'student') {
       query.student = req.user._id;
     } else if (req.user.role === 'staff') {
       query.department = req.user.department;
     }
-    // Admin sees all
     
     if (type) query.ticketType = type;
     if (status) query.status = status;
@@ -75,12 +77,10 @@ export const getTicketById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
     }
     
-    // Check access: student can only see their own tickets
     if (req.user.role === 'student' && ticket.student._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
     
-    // Staff can only see tickets in their department
     if (req.user.role === 'staff' && ticket.department._id.toString() !== req.user.department.toString()) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
@@ -102,14 +102,13 @@ export const updateTicketStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Ticket not found' });
     }
     
-    // Only staff or admin can update
     if (req.user.role === 'student') {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
     
     if (status) {
       ticket.status = status;
-      if (status === 'resolved') {
+      if (status === 'resolved' && !ticket.resolvedAt) {
         ticket.resolvedAt = new Date();
         ticket.resolutionTime = Math.round((ticket.resolvedAt - ticket.createdAt) / (1000 * 60 * 60));
       }
