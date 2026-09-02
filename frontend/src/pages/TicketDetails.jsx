@@ -2,7 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { ArrowLeftIcon, TagIcon, BriefcaseIcon, PlusCircleIcon, ArrowPathIcon, CheckCircleIcon, ShieldCheckIcon, LockClosedIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { 
+  ArrowLeftIcon, 
+  TagIcon, 
+  BriefcaseIcon, 
+  PlusCircleIcon, 
+  ArrowPathIcon, 
+  CheckCircleIcon, 
+  ShieldCheckIcon, 
+  LockClosedIcon, 
+  GlobeAltIcon,
+  EyeIcon 
+} from '@heroicons/react/24/outline';
 
 const statusMap = {
   submitted: { label: 'Open', class: 'bg-blue-500 text-white' },
@@ -20,6 +31,17 @@ const TicketDetails = () => {
   const [comment, setComment] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [loading, setLoading] = useState(true);
+  const [staffList, setStaffList] = useState([]);
+  const [selectedStaff, setSelectedStaff] = useState('');
+
+  // Fetch staff list for assignment (only if staff/admin)
+  useEffect(() => {
+    if (user?.role === 'staff' || user?.role === 'admin') {
+      api.get('/users/staff')
+        .then(res => setStaffList(res.data.data))
+        .catch(err => console.error('Failed to fetch staff:', err));
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchTicketAndComments = async () => {
@@ -59,6 +81,19 @@ const TicketDetails = () => {
     try {
       await api.patch(`/tickets/${id}/status`, { status: newStatus });
       setTicket({ ...ticket, status: newStatus });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAssign = async () => {
+    if (!selectedStaff) return;
+    try {
+      await api.patch(`/tickets/${id}/status`, { assignedTo: selectedStaff });
+      // Refresh ticket data
+      const ticketRes = await api.get(`/tickets/${id}`);
+      setTicket(ticketRes.data.data);
+      setSelectedStaff('');
     } catch (err) {
       console.error(err);
     }
@@ -167,9 +202,25 @@ const TicketDetails = () => {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Assign to Staff</label>
-              <select className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3">
-                <option>{ticket.assignedTo?.name || 'Sarah Chen'}</option>
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={selectedStaff}
+                  onChange={(e) => setSelectedStaff(e.target.value)}
+                  className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3"
+                >
+                  <option value="">Select staff...</option>
+                  {staffList.map(s => (
+                    <option key={s._id} value={s._id}>{s.name} ({s.department?.name || 'No dept'})</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleAssign}
+                  disabled={!selectedStaff}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Assign
+                </button>
+              </div>
             </div>
           </div>
 
@@ -224,7 +275,9 @@ const TicketDetails = () => {
         <form onSubmit={handleCommentSubmit} className="relative">
           {isStaff && (
             <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-xs font-bold text-gray-500"><EyeIcon className="w-4 h-4 inline mr-1" /></span>
+              <span className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                <EyeIcon className="w-4 h-4" /> Visibility
+              </span>
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-bold ${visibility === 'public' ? 'text-gray-900' : 'text-gray-400'}`}>Public</span>
                 <button

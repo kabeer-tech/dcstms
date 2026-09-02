@@ -1,10 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { useNotifications } from '../hooks/useNotifications';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { unreadCount } = useNotifications();
 
   const handleLogout = () => {
     logout();
@@ -12,7 +15,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-40">
+    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2">
@@ -24,9 +27,11 @@ const Navbar = () => {
             <div className="flex items-center gap-5">
               <Link to="/notifications" className="relative hidden md:block">
                 <BellIcon className="w-6 h-6 text-gray-500 hover:text-blue-600 transition" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white">
-                  3
-                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 border-2 border-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </Link>
 
               <div className="flex items-center gap-3">
