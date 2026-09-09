@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { 
@@ -12,14 +12,23 @@ import {
   ShieldCheckIcon, 
   LockClosedIcon, 
   GlobeAltIcon,
-  EyeIcon 
+  ChatBubbleLeftIcon,
+  PaperAirplaneIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 
 const statusMap = {
-  submitted: { label: 'Open', class: 'bg-blue-500 text-white' },
-  in_review: { label: 'Pending', class: 'bg-blue-100 text-blue-700' },
+  submitted: { label: 'Open', class: 'bg-blue-100 text-blue-700' },
+  in_review: { label: 'Pending', class: 'bg-yellow-100 text-yellow-700' },
   resolved: { label: 'Resolved', class: 'bg-green-100 text-green-700' },
   closed: { label: 'Closed', class: 'bg-gray-100 text-gray-700' },
+};
+
+const priorityMap = {
+  low: { label: 'Low', class: 'text-gray-500' },
+  medium: { label: 'Medium', class: 'text-blue-500' },
+  high: { label: 'High', class: 'text-orange-500' },
+  urgent: { label: 'Urgent', class: 'text-red-500' },
 };
 
 const TicketDetails = () => {
@@ -34,7 +43,7 @@ const TicketDetails = () => {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState('');
 
-  // Fetch staff list for assignment (only if staff/admin)
+  // Fetch staff list for assignment
   useEffect(() => {
     if (user?.role === 'staff' || user?.role === 'admin') {
       api.get('/users/staff')
@@ -52,6 +61,9 @@ const TicketDetails = () => {
         ]);
         setTicket(ticketRes.data.data);
         setComments(commentsRes.data.data || []);
+        if (user?.role === 'staff' || user?.role === 'admin') {
+          setSelectedStaff(ticketRes.data.data.assignedTo?._id || '');
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -59,7 +71,7 @@ const TicketDetails = () => {
       }
     };
     fetchTicketAndComments();
-  }, [id]);
+  }, [id, user]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -90,223 +102,279 @@ const TicketDetails = () => {
     if (!selectedStaff) return;
     try {
       await api.patch(`/tickets/${id}/status`, { assignedTo: selectedStaff });
-      // Refresh ticket data
       const ticketRes = await api.get(`/tickets/${id}`);
       setTicket(ticketRes.data.data);
-      setSelectedStaff('');
     } catch (err) {
       console.error(err);
     }
   };
 
-  if (loading) return <div className="text-center py-10 font-medium text-gray-500">Loading...</div>;
-  if (!ticket) return <div className="text-center py-10 font-medium text-gray-500">Ticket not found</div>;
+  if (loading) return <div className="text-center py-20 font-medium text-gray-500">Loading...</div>;
+  if (!ticket) return <div className="text-center py-20 font-medium text-gray-500">Ticket not found</div>;
 
-  const status = statusMap[ticket.status] || { label: ticket.status, class: 'bg-gray-100' };
+  const status = statusMap[ticket.status] || { label: ticket.status, class: 'bg-gray-100 text-gray-700' };
+  const priority = priorityMap[ticket.priority] || { label: ticket.priority, class: 'text-gray-500' };
   const isStaff = user?.role === 'staff' || user?.role === 'admin';
 
   return (
-    <div className="max-w-3xl mx-auto pb-10">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-full transition">
-          <ArrowLeftIcon className="w-5 h-5 text-gray-900" />
-        </button>
-        <h1 className="text-xl font-bold text-gray-900">#{ticket.ticketNumber}</h1>
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${status.class}`}>
-          {status.label}
-        </span>
-        <span className="text-xs font-bold text-red-500 flex items-center gap-1 ml-auto">
-          🔥 {ticket.priority}
+    <div className="pb-10 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold text-sm transition">
+            <ArrowLeftIcon className="w-4 h-4" /> Tickets
+          </button>
+          <span className="text-gray-300">&gt;</span>
+          <span className="text-gray-900 font-bold text-sm">#{ticket.ticketNumber}</span>
+        </div>
+        <span className="text-xs font-bold text-gray-400">
+          Last updated {new Date(ticket.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">{ticket.description.split('.')[0]}...</h2>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">#{ticket.ticketNumber}</h1>
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${status.class}`}>
+            {status.label}
+          </span>
+          <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${priority.class}`}>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>
+            {ticket.priority}
+          </span>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-3">{ticket.description.split('.')[0]}...</h2>
+        <div className="flex gap-2">
+          <span className="flex items-center gap-1.5 bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+            <TagIcon className="w-3.5 h-3.5 text-gray-400" /> {ticket.ticketType === 'complaint' ? 'Bug Report' : 'Service'}
+          </span>
+          <span className="flex items-center gap-1.5 bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+            <BriefcaseIcon className="w-3.5 h-3.5 text-gray-400" /> {ticket.department?.name || 'Engineering'}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         
-        <div className="flex gap-2 mb-6">
-          <span className="flex items-center gap-1 bg-gray-50 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200">
-            <TagIcon className="w-3.5 h-3.5" /> {ticket.ticketType === 'complaint' ? 'Bug Report' : 'Service'}
-          </span>
-          <span className="flex items-center gap-1 bg-gray-50 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200">
-            <BriefcaseIcon className="w-3.5 h-3.5" /> {ticket.department?.name || 'Engineering'}
-          </span>
-        </div>
-
-        <div className="bg-gray-50 rounded-2xl p-4 flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ticket.assignedTo?.name || 'unassigned'}`} alt="avatar" />
+        {/* Left Column: Details & Actions */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-50">
+              <h3 className="text-base font-bold text-gray-900">Ticket information</h3>
+              <span className="text-xs font-bold text-gray-400">Submitted {new Date(ticket.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</span>
             </div>
-            <div>
-              <p className="text-xs font-medium text-gray-500">Assigned to</p>
-              <p className="text-sm font-bold text-gray-900">{ticket.assignedTo?.name || 'Unassigned'}</p>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-700 font-medium leading-relaxed mb-8">
-          {ticket.description}
-        </p>
-
-        <div className="relative pl-4 space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-              <PlusCircleIcon className="w-4 h-4" />
-            </div>
-            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-4">
-              <p className="text-sm font-bold text-gray-900">Created</p>
-              <p className="text-xs font-medium text-gray-500">{new Date(ticket.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-          </div>
-          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-500 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-              <ArrowPathIcon className="w-4 h-4" />
-            </div>
-            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-4">
-              <p className="text-sm font-bold text-gray-900">Updated</p>
-              <p className="text-xs font-medium text-gray-500">{new Date(ticket.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-          </div>
-          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
-              <CheckCircleIcon className="w-4 h-4" />
-            </div>
-            <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-4">
-              <p className="text-sm font-bold text-gray-400">Resolved</p>
-              <p className="text-xs font-medium text-gray-400">Pending</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {isStaff && (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ShieldCheckIcon className="w-5 h-5 text-blue-600" />
-            <h3 className="text-sm font-bold text-gray-900">Staff Actions</h3>
-          </div>
-          
-          <div className="space-y-4 mb-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Status</label>
-              <select
-                value={ticket.status}
-                onChange={(e) => handleStatusUpdate(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3"
-              >
-                <option value="submitted">Open</option>
-                <option value="in_review">In Review</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Assign to Staff</label>
-              <div className="flex gap-2">
-                <select
-                  value={selectedStaff}
-                  onChange={(e) => setSelectedStaff(e.target.value)}
-                  className="flex-1 bg-gray-50 border border-gray-200 text-gray-900 text-sm font-medium rounded-xl focus:ring-blue-500 focus:border-blue-500 block p-3"
-                >
-                  <option value="">Select staff...</option>
-                  {staffList.map(s => (
-                    <option key={s._id} value={s._id}>{s.name} ({s.department?.name || 'No dept'})</option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleAssign}
-                  disabled={!selectedStaff}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium text-sm hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Assign
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleStatusUpdate('resolved')}
-              className="flex-1 bg-teal-500 text-white font-bold text-sm py-3 rounded-xl hover:bg-teal-600 transition flex items-center justify-center gap-2"
-            >
-              <CheckCircleIcon className="w-5 h-5" /> Resolve
-            </button>
-            <button
-              onClick={() => handleStatusUpdate('closed')}
-              className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold text-sm py-3 rounded-xl hover:bg-gray-50 transition flex items-center justify-center gap-2"
-            >
-              <ArrowPathIcon className="w-5 h-5" /> Close
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-            Comments
-          </h3>
-          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-0.5 rounded-full">{comments.length}</span>
-        </div>
-
-        <div className="space-y-6 mb-6">
-          {comments.map((c) => (
-            <div key={c._id} className="flex gap-3">
-              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author?.name}`} alt="avatar" className="w-10 h-10 rounded-full bg-gray-100" />
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <span className="font-bold text-sm text-gray-900">{c.author?.name}</span>
-                  <span className="text-xs font-medium text-gray-400">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            
+            <div className="p-6 md:p-8">
+              <div className="bg-gray-50 rounded-2xl p-5 flex justify-between items-center mb-8 border border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm border border-white shadow-sm">
+                    {ticket.assignedTo?.name ? ticket.assignedTo.name.split(' ').map(n=>n[0]).join('').toUpperCase() : 'SC'}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Assigned to</p>
+                    <p className="text-sm font-bold text-gray-900">{ticket.assignedTo?.name || 'Unassigned'}</p>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-gray-700 mt-1">{c.message}</p>
-                <div className="mt-2">
-                  {c.visibility === 'internal' ? (
-                    <div className="inline-flex items-center justify-center w-6 h-6 rounded bg-blue-100 text-blue-600"><LockClosedIcon className="w-3.5 h-3.5" /></div>
+                {isStaff && <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Change</button>}
+              </div>
+
+              <div className="mb-10">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Description</p>
+                <p className="text-sm text-gray-600 font-medium leading-relaxed whitespace-pre-wrap">
+                  {ticket.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-5">Activity timeline</p>
+                <div className="relative pl-4 space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gray-100">
+                  <div className="relative flex items-start group">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white shrink-0 shadow-sm z-10 -ml-2.5 mt-0.5">
+                      <PlusCircleIcon className="w-4 h-4" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-bold text-gray-900">Created</p>
+                      <p className="text-xs font-medium text-gray-500 mt-1">{new Date(ticket.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="relative flex items-start group">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 border-2 border-blue-200 text-blue-600 shrink-0 z-10 -ml-2.5 mt-0.5">
+                      <ArrowPathIcon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-bold text-gray-900">Updated</p>
+                      <p className="text-xs font-medium text-gray-500 mt-1">{new Date(ticket.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+
+                  {ticket.status === 'resolved' || ticket.status === 'closed' ? (
+                    <div className="relative flex items-start group">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white shrink-0 shadow-sm z-10 -ml-2.5 mt-0.5">
+                        <CheckCircleIcon className="w-4 h-4" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-bold text-gray-900">Resolved</p>
+                        <p className="text-xs font-medium text-gray-500 mt-1">Ticket completed</p>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="inline-flex items-center justify-center w-6 h-6 rounded bg-blue-100 text-blue-600"><GlobeAltIcon className="w-3.5 h-3.5" /></div>
+                    <div className="relative flex items-start group opacity-50">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-200 text-gray-400 shrink-0 z-10 -ml-2.5 mt-0.5">
+                        <ClockIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-sm font-bold text-gray-500">Resolved-pending</p>
+                        <p className="text-xs font-medium text-gray-400 mt-1">Awaiting confirmation from requester</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
 
-        <form onSubmit={handleCommentSubmit} className="relative">
           {isStaff && (
-            <div className="flex justify-between items-center mb-2 px-1">
-              <span className="text-xs font-bold text-gray-500 flex items-center gap-1">
-                <EyeIcon className="w-4 h-4" /> Visibility
-              </span>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold ${visibility === 'public' ? 'text-gray-900' : 'text-gray-400'}`}>Public</span>
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+              <h3 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <ShieldCheckIcon className="w-5 h-5 text-blue-600" /> Staff Actions
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Status</label>
+                  <select
+                    value={ticket.status}
+                    onChange={(e) => handleStatusUpdate(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-xl focus:ring-2 focus:ring-blue-500 outline-none p-3.5 shadow-sm"
+                  >
+                    <option value="submitted">Open</option>
+                    <option value="in_review">In Review</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Assign to Staff</label>
+                  <div className="flex gap-2">
+                    <select 
+                      value={selectedStaff}
+                      onChange={(e) => setSelectedStaff(e.target.value)}
+                      className="flex-1 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-xl focus:ring-2 focus:ring-blue-500 outline-none p-3.5 shadow-sm"
+                    >
+                      <option value="">Unassigned</option>
+                      {staffList.map(staff => (
+                        <option key={staff._id} value={staff._id}>{staff.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleAssign}
+                      disabled={!selectedStaff}
+                      className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+                    >
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
                 <button
-                  type="button"
-                  onClick={() => setVisibility(v => v === 'public' ? 'internal' : 'public')}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${visibility === 'internal' ? 'bg-blue-600' : 'bg-gray-200'}`}
+                  onClick={() => handleStatusUpdate('resolved')}
+                  className="flex-1 bg-teal-500 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-teal-600 shadow-sm flex items-center justify-center gap-2 transition"
                 >
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${visibility === 'internal' ? 'translate-x-4' : 'translate-x-1'}`} />
+                  <CheckCircleIcon className="w-5 h-5" /> Resolve
                 </button>
-                <span className={`text-xs font-bold ${visibility === 'internal' ? 'text-gray-900' : 'text-gray-400'}`}>Internal</span>
+                <button
+                  onClick={() => handleStatusUpdate('closed')}
+                  className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold text-sm py-3.5 rounded-xl hover:bg-gray-50 shadow-sm flex items-center justify-center gap-2 transition"
+                >
+                  <ArrowPathIcon className="w-5 h-5" /> Close
+                </button>
               </div>
             </div>
           )}
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Write a comment..."
-            className="w-full bg-white border border-gray-200 rounded-2xl p-4 text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition resize-none pb-14"
-            rows="3"
-          />
-          <button
-            type="submit"
-            disabled={!comment.trim()}
-            className="absolute bottom-3 right-3 bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded-xl hover:bg-blue-700 transition disabled:opacity-50 flex items-center gap-2 shadow-sm"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-            Post Comment
-          </button>
-        </form>
+        </div>
+
+        {/* Right Column: Comments */}
+        <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] sticky top-24">
+          <div className="flex justify-between items-center p-6 border-b border-gray-50">
+            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <ChatBubbleLeftIcon className="w-5 h-5 text-gray-400" /> Comments
+            </h3>
+            <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">{comments.length}</span>
+          </div>
+
+          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+            {comments.length === 0 ? (
+              <p className="text-sm font-medium text-gray-500 text-center py-4">No comments yet.</p>
+            ) : (
+              comments.map((c) => (
+                <div key={c._id} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
+                    {c.author?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="font-bold text-sm text-gray-900 mr-3">{c.author?.name}</span>
+                      <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 font-medium mb-2 leading-relaxed bg-gray-50 p-3 rounded-2xl rounded-tl-none">{c.message}</p>
+                    {c.visibility === 'internal' ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded"><LockClosedIcon className="w-3 h-3" /> Internal</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500"><GlobeAltIcon className="w-3 h-3" /> Public</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="p-6 border-t border-gray-50 bg-gray-50/50 mt-auto">
+            <form onSubmit={handleCommentSubmit}>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-sm font-bold text-gray-900">Add a comment</span>
+                {isStaff && (
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${visibility === 'public' ? 'text-gray-900' : 'text-gray-400'}`}>Public</span>
+                    <button
+                      type="button"
+                      onClick={() => setVisibility(v => v === 'public' ? 'internal' : 'public')}
+                      className="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 transition-colors cursor-pointer"
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${visibility === 'internal' ? 'translate-x-4 bg-blue-500' : 'translate-x-1'}`} />
+                    </button>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${visibility === 'internal' ? 'text-gray-900' : 'text-gray-400'}`}>Internal</span>
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  className="w-full bg-white border border-gray-200 rounded-2xl p-4 pr-16 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none resize-none min-h-[100px] shadow-sm mb-3"
+                />
+                <button
+                  type="submit"
+                  disabled={!comment.trim()}
+                  className="absolute bottom-6 right-3 bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm transition"
+                >
+                  <PaperAirplaneIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <button
+                type="submit"
+                disabled={!comment.trim()}
+                className="w-full bg-blue-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm flex justify-center items-center gap-2 transition md:hidden"
+              >
+                <PaperAirplaneIcon className="w-4 h-4" />
+                Post Comment
+              </button>
+            </form>
+          </div>
+        </div>
+        
       </div>
     </div>
   );

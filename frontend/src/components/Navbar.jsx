@@ -1,56 +1,64 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useNotifications } from '../hooks/useNotifications';
+import { BellIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { unreadCount } = useNotifications();
+  const { user } = useAuth();
+  const { unreadCount = 0 } = useNotifications() || {};
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <ShieldCheckIcon className="w-8 h-8 text-blue-600" />
+    <nav className="bg-white sticky top-0 z-40 border-b border-gray-100">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 md:h-20">
+          
+          {/* Mobile Logo */}
+          <Link to="/" className="flex items-center gap-2 md:hidden">
+            <ShieldCheckIcon className="w-7 h-7 text-blue-600" />
             <span className="text-xl font-bold text-gray-900 tracking-tight">DCSTMS</span>
           </Link>
 
+          {/* Desktop Context Header */}
+          <div className="hidden md:flex flex-col justify-center">
+            <p className="text-xs font-medium text-gray-500">{currentDate}</p>
+            <p className="text-sm font-bold text-gray-900 capitalize">{user?.role} workspace</p>
+          </div>
+
           {user && (
-            <div className="flex items-center gap-5">
-              <Link to="/notifications" className="relative hidden md:block">
-                <BellIcon className="w-6 h-6 text-gray-500 hover:text-blue-600 transition" />
+            <div className="flex items-center gap-4 ml-auto">
+              <Link to="/notifications" className="relative p-2 hover:bg-gray-50 rounded-full transition">
+                <BellIcon className="w-5 h-5 text-gray-700" strokeWidth={2} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 border-2 border-white">
+                  <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-white shadow-sm">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </Link>
 
-              <div className="flex items-center gap-3">
-                <div className="hidden md:flex flex-col items-end mr-2">
-                  <span className="text-sm font-semibold text-gray-900">{user.name}</span>
-                  <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider">{user.role}</span>
-                </div>
-                
-                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm cursor-pointer md:hidden">
+              {/* Desktop User Avatar (Navigates to Profile) */}
+              <Link 
+                to="/profile"
+                className="hidden md:flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-full transition" 
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                   {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                 </div>
+              </Link>
 
-                <button
-                  onClick={handleLogout}
-                  className="hidden md:block text-sm bg-gray-50 text-gray-600 px-4 py-2 rounded-xl font-medium hover:bg-gray-100 transition"
-                >
-                  Log out
-                </button>
-              </div>
+              {/* Mobile User Avatar (Navigates to Profile) */}
+              <Link 
+                to="/profile"
+                className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs md:hidden shadow-sm" 
+              >
+                {user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+              </Link>
             </div>
           )}
         </div>

@@ -19,19 +19,21 @@ export const createTicket = async (req, res) => {
       student: req.user._id,
       status: 'submitted'
     });
+    
     await logAction({
       actor: req.user._id,
       action: 'TICKET_CREATED',
       targetTicket: ticket._id,
       details: { ticketType, category }
     });
-    // Notify student
+    
     await notifyUser({
       recipient: req.user,
       ticket: ticket._id,
       message: `Your ticket ${ticketNumber} has been submitted successfully.`,
       emailSubject: 'Ticket Submitted'
     });
+    
     res.status(201).json({ success: true, data: ticket });
   } catch (error) {
     console.error('Create ticket error:', error);
@@ -41,22 +43,36 @@ export const createTicket = async (req, res) => {
 
 export const getTickets = async (req, res) => {
   try {
-    const { type, status, category, page = 1, limit = 10 } = req.query;
+    const { type, status, category, page = 1, limit = 50 } = req.query; 
     const query = {};
-    if (req.user.role === 'student') query.student = req.user._id;
-    else if (req.user.role === 'staff') query.department = req.user.department;
+    
+    // --- THIS IS THE FIX FOR STAFF VISIBILITY ---
+    if (req.user.role === 'student') {
+      query.student = req.user._id;
+    } else if (req.user.role === 'staff') {
+      const staffConditions = [{ assignedTo: req.user._id }];
+      if (req.user.department) {
+        staffConditions.push({ department: req.user.department });
+      }
+      query.$or = staffConditions;
+    }
+    // Admins skip the if/else block entirely, leaving query as {} so they see all tickets
+
     if (type) query.ticketType = type;
     if (status) query.status = status;
     if (category) query.category = category;
+    
     const skip = (page - 1) * limit;
     const tickets = await Ticket.find(query)
       .populate('student', 'name email')
       .populate('department', 'name')
-      .populate('assignedTo', 'name')
+      .populate('assignedTo', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+      
     const total = await Ticket.countDocuments(query);
+    
     res.json({
       success: true,
       data: tickets,
@@ -73,14 +89,24 @@ export const getTicketById = async (req, res) => {
     const ticket = await Ticket.findById(req.params.id)
       .populate('student', 'name email')
       .populate('department', 'name')
-      .populate('assignedTo', 'name');
+      .populate('assignedTo', 'name email');
+      
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
+    
+    // --- THIS IS THE FIX FOR STAFF TICKET DETAILS ACCESS ---
     if (req.user.role === 'student' && ticket.student._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
-    if (req.user.role === 'staff' && ticket.department._id.toString() !== req.user.department.toString()) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
+    
+    if (req.user.role === 'staff') {
+      const isAssigned = ticket.assignedTo && ticket.assignedTo._id.toString() === req.user._id.toString();
+      const isSameDept = ticket.department && req.user.department && ticket.department._id.toString() === req.user.department.toString();
+      
+      if (!isAssigned && !isSameDept) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
     }
+    
     res.json({ success: true, data: ticket });
   } catch (error) {
     console.error('Get ticket error:', error);
@@ -92,12 +118,15 @@ export const updateTicketStatus = async (req, res) => {
   try {
     const { status, assignedTo } = req.body;
     const ticket = await Ticket.findById(req.params.id);
+    
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found' });
     if (req.user.role === 'student') {
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
+    
     const oldStatus = ticket.status;
     const oldAssigned = ticket.assignedTo;
+    
     if (status) {
       ticket.status = status;
       if (status === 'resolved' && !ticket.resolvedAt) {
@@ -106,10 +135,13 @@ export const updateTicketStatus = async (req, res) => {
       }
       if (status === 'closed') ticket.closedAt = new Date();
     }
+    
     if (assignedTo) {
       ticket.assignedTo = assignedTo;
     }
+    
     await ticket.save();
+    
     if (status && status !== oldStatus) {
       await logAction({
         actor: req.user._id,
@@ -117,7 +149,7 @@ export const updateTicketStatus = async (req, res) => {
         targetTicket: ticket._id,
         details: { from: oldStatus, to: status }
       });
-      // Notify student
+      
       const student = await User.findById(ticket.student);
       if (student) {
         await notifyUser({
@@ -128,6 +160,7 @@ export const updateTicketStatus = async (req, res) => {
         });
       }
     }
+    
     if (assignedTo && assignedTo !== oldAssigned?.toString()) {
       await logAction({
         actor: req.user._id,
@@ -136,6 +169,7 @@ export const updateTicketStatus = async (req, res) => {
         details: { from: oldAssigned, to: assignedTo }
       });
     }
+    
     res.json({ success: true, data: ticket });
   } catch (error) {
     console.error('Update ticket error:', error);
