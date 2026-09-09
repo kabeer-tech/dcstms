@@ -52,10 +52,10 @@ const Dashboard = () => {
 
   const getStatusIcon = (status) => {
     if (status === 'resolved' || status === 'closed') 
-      return <div className="bg-green-50 p-2.5 rounded-xl border border-green-100"><CheckCircleIcon className="w-5 h-5 text-green-500" /></div>;
+      return <div className="bg-green-50 p-2.5 rounded-xl border border-green-100 shrink-0"><CheckCircleIcon className="w-5 h-5 text-green-500" /></div>;
     if (status === 'in_review') 
-      return <div className="bg-orange-50 p-2.5 rounded-xl border border-orange-100"><ClockIcon className="w-5 h-5 text-orange-500" /></div>;
-    return <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100"><TicketIcon className="w-5 h-5 text-blue-500" /></div>;
+      return <div className="bg-orange-50 p-2.5 rounded-xl border border-orange-100 shrink-0"><ClockIcon className="w-5 h-5 text-orange-500" /></div>;
+    return <div className="bg-blue-50 p-2.5 rounded-xl border border-blue-100 shrink-0"><TicketIcon className="w-5 h-5 text-blue-500" /></div>;
   };
 
   const priorityQueue = tickets
@@ -69,16 +69,15 @@ const Dashboard = () => {
 
   if (user?.role === 'staff' || user?.role === 'admin') {
     return (
-      <div className="space-y-8 pb-8">
+      <div className="space-y-6 md:space-y-8 pb-8">
         <div>
           <p className="text-blue-600 font-bold text-sm mb-1">{getGreeting()}, {user?.name.split(' ')[0]}</p>
-          {/* Dynamic Heading Fix applied here */}
-          <h1 className="text-3xl font-black text-gray-900">{user?.role === 'admin' ? 'Admin Dashboard' : 'Staff Dashboard'}</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900">{user?.role === 'admin' ? 'Admin Dashboard' : 'Staff Dashboard'}</h1>
           <p className="text-gray-500 text-sm mt-1 font-medium">Manage your assigned service requests and complaints.</p>
         </div>
 
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <h2 className="text-lg font-bold text-gray-900">Assigned Tickets Queue</h2>
             <div className="bg-white border border-gray-200 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 cursor-pointer shadow-sm hover:bg-gray-50 transition">
               <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,13 +89,13 @@ const Dashboard = () => {
               </svg>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center justify-between">
               <div>
                 <p className="text-3xl font-black text-gray-900">{stats.total}</p>
                 <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wide">Assigned</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+              <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 shrink-0">
                 <InboxStackIcon className="w-6 h-6 text-blue-600" />
               </div>
             </div>
@@ -105,7 +104,7 @@ const Dashboard = () => {
                 <p className="text-3xl font-black text-gray-900">{stats.inProgress}</p>
                 <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wide">In progress</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100">
+              <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center border border-orange-100 shrink-0">
                 <ClockIcon className="w-6 h-6 text-orange-500" />
               </div>
             </div>
@@ -114,25 +113,25 @@ const Dashboard = () => {
                 <p className="text-3xl font-black text-gray-900">{stats.resolved}</p>
                 <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-wide">Resolved</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100">
+              <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100 shrink-0">
                 <CheckCircleIcon className="w-6 h-6 text-green-500" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           <div className="lg:col-span-7">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-gray-900">Priority queue</h2>
                 {stats.urgent > 0 && (
-                  <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                  <span className="bg-red-100 text-red-600 text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap">
                     {stats.urgent} urgent
                   </span>
                 )}
               </div>
-              <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700">View all tickets</Link>
+              <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap">View all tickets</Link>
             </div>
             
             <div className="relative mb-5">
@@ -155,17 +154,17 @@ const Dashboard = () => {
                 </div>
               ) : (
                 priorityQueue.map((ticket) => (
-                  <Link key={ticket._id} to={`/tickets/${ticket._id}`} className="bg-white border border-gray-100 rounded-2xl p-4 flex justify-between items-center shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2.5 rounded-xl border ${ticket.priority === 'urgent' ? 'bg-red-50 border-red-100 text-red-500' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
+                  <Link key={ticket._id} to={`/tickets/${ticket._id}`} className="bg-white border border-gray-100 rounded-2xl p-4 flex justify-between items-center gap-3 shadow-sm hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                      <div className={`shrink-0 p-2.5 rounded-xl border ${ticket.priority === 'urgent' ? 'bg-red-50 border-red-100 text-red-500' : 'bg-gray-50 border-gray-100 text-gray-500'}`}>
                         <TicketIcon className="w-5 h-5" />
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">#{ticket.ticketNumber}</span>
-                        <span className="text-xs font-medium text-gray-500 truncate max-w-[200px] sm:max-w-[300px] mt-0.5">{ticket.description}</span>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-sm font-bold text-gray-900 truncate">#{ticket.ticketNumber}</span>
+                        <span className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.description}</span>
                       </div>
                     </div>
-                    <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                    <ChevronRightIcon className="w-5 h-5 text-gray-300 shrink-0 group-hover:text-blue-500 transition-colors" />
                   </Link>
                 ))
               )}
@@ -173,9 +172,9 @@ const Dashboard = () => {
           </div>
 
           <div className="lg:col-span-5">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
               <h2 className="text-lg font-bold text-gray-900">Recent activity</h2>
-              <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700">View all</Link>
+              <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap">View all</Link>
             </div>
             
             <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden p-2 mb-6">
@@ -184,14 +183,16 @@ const Dashboard = () => {
               ) : (
                 recent.slice(0, 4).map((ticket) => (
                   <Link key={ticket._id} to={`/tickets/${ticket._id}`} className="flex items-center p-3 md:p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition rounded-2xl group">
-                    <div className="mr-4">{getStatusIcon(ticket.status)}</div>
+                    <div className="mr-3 md:mr-4 shrink-0">
+                      {getStatusIcon(ticket.status)}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                         Ticket #{ticket.ticketNumber}
                       </p>
                       <p className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.category}</p>
                     </div>
-                    <div className="text-xs font-bold text-gray-400 whitespace-nowrap ml-3">
+                    <div className="text-xs font-bold text-gray-400 whitespace-nowrap ml-2 md:ml-3 shrink-0">
                       {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </div>
                   </Link>
@@ -199,13 +200,13 @@ const Dashboard = () => {
               )}
             </div>
 
-            <div className="bg-blue-50 rounded-3xl p-6 border border-blue-100 flex gap-4 items-start shadow-sm">
+            <div className="bg-blue-50 rounded-3xl p-5 md:p-6 border border-blue-100 flex gap-4 items-start shadow-sm">
               <div className="bg-blue-500 p-2.5 rounded-full shrink-0 shadow-sm">
-                <LightBulbIcon className="w-6 h-6 text-white" />
+                <LightBulbIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-bold text-gray-900">Keep your queue moving</p>
-                <p className="text-xs font-medium text-gray-600 mt-1.5 leading-relaxed">Resolve or update tickets regularly to keep response times low and ensure smooth operations.</p>
+                <p className="text-xs font-medium text-gray-600 mt-1.5 leading-relaxed">Resolve or update tickets regularly to keep response times low.</p>
               </div>
             </div>
           </div>
@@ -216,54 +217,54 @@ const Dashboard = () => {
 
   // Student Dashboard
   return (
-    <div className="space-y-8 pb-8">
+    <div className="space-y-6 md:space-y-8 pb-8">
       <div>
         <p className="text-blue-600 font-bold text-sm mb-1">{getGreeting()}, {user?.name.split(' ')[0]}</p>
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">How can we help today?</h1>
+        <h1 className="text-2xl md:text-4xl font-black text-gray-900 leading-tight">How can we help today?</h1>
         <p className="text-gray-500 text-sm mt-2 font-medium">Track requests and get support from your department.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link to="/tickets/new" className="bg-blue-500 rounded-[24px] p-6 shadow-md text-white relative overflow-hidden group h-40 flex flex-col justify-end">
-          <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center absolute top-6 left-6 backdrop-blur-sm">
-            <PlusIcon className="w-6 h-6 text-white" strokeWidth={2.5} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Link to="/tickets/new" className="bg-blue-500 rounded-[24px] p-6 shadow-md text-white relative overflow-hidden group h-36 md:h-40 flex flex-col justify-end">
+          <div className="bg-white/20 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center absolute top-5 left-5 md:top-6 md:left-6 backdrop-blur-sm">
+            <PlusIcon className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={2.5} />
           </div>
-          <h3 className="font-bold text-xl z-10">Submit New Ticket</h3>
-          <ArrowUpRightIcon className="w-6 h-6 absolute bottom-6 right-6 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+          <h3 className="font-bold text-lg md:text-xl z-10">Submit New Ticket</h3>
+          <ArrowUpRightIcon className="w-5 h-5 md:w-6 md:h-6 absolute bottom-6 right-6 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
         </Link>
 
-        <Link to="/tickets" className="bg-white border border-gray-200 rounded-[24px] p-6 shadow-sm text-gray-900 relative group h-40 flex flex-col justify-end hover:border-gray-300 hover:shadow-md transition-all">
-          <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center absolute top-6 left-6 border border-blue-100">
-            <TicketIcon className="w-6 h-6 text-blue-600" />
+        <Link to="/tickets" className="bg-white border border-gray-200 rounded-[24px] p-6 shadow-sm text-gray-900 relative group h-36 md:h-40 flex flex-col justify-end hover:border-gray-300 hover:shadow-md transition-all">
+          <div className="bg-blue-50 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center absolute top-5 left-5 md:top-6 md:left-6 border border-blue-100">
+            <TicketIcon className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
           </div>
-          <h3 className="font-bold text-xl">View My Tickets</h3>
-          <ArrowUpRightIcon className="w-6 h-6 absolute bottom-6 right-6 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+          <h3 className="font-bold text-lg md:text-xl">View My Tickets</h3>
+          <ArrowUpRightIcon className="w-5 h-5 md:w-6 md:h-6 absolute bottom-6 right-6 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
         </Link>
       </div>
 
       <div>
-        <div className="flex justify-between items-end mb-4">
+        <div className="flex flex-wrap justify-between items-end gap-2 mb-4">
           <h2 className="text-lg font-bold text-gray-900">Your overview</h2>
           <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">This month</span>
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col">
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-3xl font-black text-gray-900">{stats.total}</p>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Total tickets</p>
+        <div className="grid grid-cols-3 gap-3 md:gap-4">
+          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 flex flex-col">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mt-auto">
+              <p className="text-2xl md:text-3xl font-black text-gray-900">{stats.total}</p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Total</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col">
+          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 flex flex-col">
             <div className="w-2 h-2 rounded-full bg-orange-400 mb-2"></div>
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-3xl font-black text-gray-900">{stats.open}</p>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mt-auto">
+              <p className="text-2xl md:text-3xl font-black text-gray-900">{stats.open}</p>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Open</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col">
+          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 flex flex-col">
             <div className="w-2 h-2 rounded-full bg-green-500 mb-2"></div>
-            <div className="flex items-baseline gap-2 mt-auto">
-              <p className="text-3xl font-black text-gray-900">{stats.resolved}</p>
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 mt-auto">
+              <p className="text-2xl md:text-3xl font-black text-gray-900">{stats.resolved}</p>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Resolved</p>
             </div>
           </div>
@@ -271,9 +272,9 @@ const Dashboard = () => {
       </div>
 
       <div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
           <h2 className="text-lg font-bold text-gray-900">Recent activity</h2>
-          <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700">View all</Link>
+          <Link to="/tickets" className="text-sm font-bold text-blue-600 hover:text-blue-700 whitespace-nowrap">View all</Link>
         </div>
         
         <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden p-2">
@@ -282,14 +283,14 @@ const Dashboard = () => {
           ) : (
             recent.map((ticket) => (
               <Link key={ticket._id} to={`/tickets/${ticket._id}`} className="flex items-center p-3 md:p-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition rounded-2xl group">
-                <div className="mr-4">{getStatusIcon(ticket.status)}</div>
+                <div className="mr-3 md:mr-4 shrink-0">{getStatusIcon(ticket.status)}</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                     Ticket #{ticket.ticketNumber}
                   </p>
                   <p className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.description}</p>
                 </div>
-                <div className="text-xs font-bold text-gray-400 whitespace-nowrap ml-4">
+                <div className="text-xs font-bold text-gray-400 whitespace-nowrap ml-2 md:ml-4 shrink-0">
                   {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </div>
               </Link>

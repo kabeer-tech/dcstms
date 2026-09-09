@@ -43,7 +43,6 @@ const TicketDetails = () => {
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState('');
 
-  // Fetch staff list for assignment
   useEffect(() => {
     if (user?.role === 'staff' || user?.role === 'admin') {
       api.get('/users/staff')
@@ -118,68 +117,69 @@ const TicketDetails = () => {
 
   return (
     <div className="pb-10 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+        <div className="flex items-center gap-2 md:gap-3">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold text-sm transition">
             <ArrowLeftIcon className="w-4 h-4" /> Tickets
           </button>
           <span className="text-gray-300">&gt;</span>
-          <span className="text-gray-900 font-bold text-sm">#{ticket.ticketNumber}</span>
+          <span className="text-gray-900 font-bold text-sm truncate max-w-[120px] md:max-w-none">#{ticket.ticketNumber}</span>
         </div>
-        <span className="text-xs font-bold text-gray-400">
-          Last updated {new Date(ticket.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <span className="text-xs font-bold text-gray-400 whitespace-nowrap">
+          Updated {new Date(ticket.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
 
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">#{ticket.ticketNumber}</h1>
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${status.class}`}>
-            {status.label}
-          </span>
-          <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${priority.class}`}>
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>
-            {ticket.priority}
-          </span>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3">
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight break-all">#{ticket.ticketNumber}</h1>
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md whitespace-nowrap ${status.class}`}>
+              {status.label}
+            </span>
+            <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 whitespace-nowrap ${priority.class}`}>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" /></svg>
+              {ticket.priority}
+            </span>
+          </div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-3">{ticket.description.split('.')[0]}...</h2>
-        <div className="flex gap-2">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 break-words">{ticket.description.split('.')[0]}...</h2>
+        <div className="flex flex-wrap gap-2">
           <span className="flex items-center gap-1.5 bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
-            <TagIcon className="w-3.5 h-3.5 text-gray-400" /> {ticket.ticketType === 'complaint' ? 'Bug Report' : 'Service'}
+            <TagIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {ticket.ticketType === 'complaint' ? 'Bug Report' : 'Service'}
           </span>
           <span className="flex items-center gap-1.5 bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
-            <BriefcaseIcon className="w-3.5 h-3.5 text-gray-400" /> {ticket.department?.name || 'Engineering'}
+            <BriefcaseIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {ticket.department?.name || 'Engineering'}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         
-        {/* Left Column: Details & Actions */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-50">
+            <div className="flex flex-wrap justify-between items-center gap-2 p-5 md:p-6 border-b border-gray-50">
               <h3 className="text-base font-bold text-gray-900">Ticket information</h3>
               <span className="text-xs font-bold text-gray-400">Submitted {new Date(ticket.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}</span>
             </div>
             
-            <div className="p-6 md:p-8">
-              <div className="bg-gray-50 rounded-2xl p-5 flex justify-between items-center mb-8 border border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm border border-white shadow-sm">
+            <div className="p-5 md:p-8">
+              <div className="bg-gray-50 rounded-2xl p-4 md:p-5 flex flex-wrap justify-between items-center gap-4 mb-8 border border-gray-100">
+                <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm border border-white shadow-sm shrink-0">
                     {ticket.assignedTo?.name ? ticket.assignedTo.name.split(' ').map(n=>n[0]).join('').toUpperCase() : 'SC'}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Assigned to</p>
-                    <p className="text-sm font-bold text-gray-900">{ticket.assignedTo?.name || 'Unassigned'}</p>
+                    <p className="text-sm font-bold text-gray-900 truncate">{ticket.assignedTo?.name || 'Unassigned'}</p>
                   </div>
                 </div>
-                {isStaff && <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Change</button>}
+                {isStaff && <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition whitespace-nowrap">Change</button>}
               </div>
 
               <div className="mb-10">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Description</p>
-                <p className="text-sm text-gray-600 font-medium leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-gray-600 font-medium leading-relaxed whitespace-pre-wrap break-words">
                   {ticket.description}
                 </p>
               </div>
@@ -191,9 +191,9 @@ const TicketDetails = () => {
                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white shrink-0 shadow-sm z-10 -ml-2.5 mt-0.5">
                       <PlusCircleIcon className="w-4 h-4" />
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 min-w-0">
                       <p className="text-sm font-bold text-gray-900">Created</p>
-                      <p className="text-xs font-medium text-gray-500 mt-1">{new Date(ticket.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
+                      <p className="text-xs font-medium text-gray-500 mt-1 break-words">{new Date(ticket.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
                     </div>
                   </div>
                   
@@ -201,9 +201,9 @@ const TicketDetails = () => {
                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 border-2 border-blue-200 text-blue-600 shrink-0 z-10 -ml-2.5 mt-0.5">
                       <ArrowPathIcon className="w-3.5 h-3.5" />
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 min-w-0">
                       <p className="text-sm font-bold text-gray-900">Updated</p>
-                      <p className="text-xs font-medium text-gray-500 mt-1">{new Date(ticket.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
+                      <p className="text-xs font-medium text-gray-500 mt-1 break-words">{new Date(ticket.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', year: 'numeric' })}</p>
                     </div>
                   </div>
 
@@ -212,9 +212,9 @@ const TicketDetails = () => {
                       <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white shrink-0 shadow-sm z-10 -ml-2.5 mt-0.5">
                         <CheckCircleIcon className="w-4 h-4" />
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 min-w-0">
                         <p className="text-sm font-bold text-gray-900">Resolved</p>
-                        <p className="text-xs font-medium text-gray-500 mt-1">Ticket completed</p>
+                        <p className="text-xs font-medium text-gray-500 mt-1 break-words">Ticket completed</p>
                       </div>
                     </div>
                   ) : (
@@ -222,9 +222,9 @@ const TicketDetails = () => {
                       <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white border border-gray-200 text-gray-400 shrink-0 z-10 -ml-2.5 mt-0.5">
                         <ClockIcon className="w-3.5 h-3.5" />
                       </div>
-                      <div className="ml-4">
+                      <div className="ml-4 min-w-0">
                         <p className="text-sm font-bold text-gray-500">Resolved-pending</p>
-                        <p className="text-xs font-medium text-gray-400 mt-1">Awaiting confirmation from requester</p>
+                        <p className="text-xs font-medium text-gray-400 mt-1 break-words">Awaiting confirmation</p>
                       </div>
                     </div>
                   )}
@@ -234,7 +234,7 @@ const TicketDetails = () => {
           </div>
 
           {isStaff && (
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-8">
               <h3 className="text-sm font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <ShieldCheckIcon className="w-5 h-5 text-blue-600" /> Staff Actions
               </h3>
@@ -259,7 +259,7 @@ const TicketDetails = () => {
                     <select 
                       value={selectedStaff}
                       onChange={(e) => setSelectedStaff(e.target.value)}
-                      className="flex-1 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-xl focus:ring-2 focus:ring-blue-500 outline-none p-3.5 shadow-sm"
+                      className="flex-1 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-xl focus:ring-2 focus:ring-blue-500 outline-none p-3.5 shadow-sm min-w-0"
                     >
                       <option value="">Unassigned</option>
                       {staffList.map(staff => (
@@ -269,7 +269,7 @@ const TicketDetails = () => {
                     <button
                       onClick={handleAssign}
                       disabled={!selectedStaff}
-                      className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+                      className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 shadow-sm shrink-0"
                     >
                       Assign
                     </button>
@@ -277,48 +277,47 @@ const TicketDetails = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => handleStatusUpdate('resolved')}
                   className="flex-1 bg-teal-500 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-teal-600 shadow-sm flex items-center justify-center gap-2 transition"
                 >
-                  <CheckCircleIcon className="w-5 h-5" /> Resolve
+                  <CheckCircleIcon className="w-5 h-5 shrink-0" /> Resolve
                 </button>
                 <button
                   onClick={() => handleStatusUpdate('closed')}
                   className="flex-1 bg-white border border-gray-200 text-gray-700 font-bold text-sm py-3.5 rounded-xl hover:bg-gray-50 shadow-sm flex items-center justify-center gap-2 transition"
                 >
-                  <ArrowPathIcon className="w-5 h-5" /> Close
+                  <ArrowPathIcon className="w-5 h-5 shrink-0" /> Close
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Right Column: Comments */}
-        <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] sticky top-24">
-          <div className="flex justify-between items-center p-6 border-b border-gray-50">
+        <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[600px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
+          <div className="flex justify-between items-center p-5 md:p-6 border-b border-gray-50">
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <ChatBubbleLeftIcon className="w-5 h-5 text-gray-400" /> Comments
             </h3>
             <span className="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full">{comments.length}</span>
           </div>
 
-          <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div className="flex-1 p-5 md:p-6 space-y-6 overflow-y-auto">
             {comments.length === 0 ? (
               <p className="text-sm font-medium text-gray-500 text-center py-4">No comments yet.</p>
             ) : (
               comments.map((c) => (
-                <div key={c._id} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
+                <div key={c._id} className="flex gap-3 md:gap-4">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 border border-blue-100">
                     {c.author?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <span className="font-bold text-sm text-gray-900 mr-3">{c.author?.name}</span>
-                      <span className="text-[10px] font-bold text-gray-400">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap justify-between items-baseline gap-1 mb-1">
+                      <span className="font-bold text-sm text-gray-900 mr-2 truncate">{c.author?.name}</span>
+                      <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{new Date(c.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                     </div>
-                    <p className="text-sm text-gray-600 font-medium mb-2 leading-relaxed bg-gray-50 p-3 rounded-2xl rounded-tl-none">{c.message}</p>
+                    <p className="text-sm text-gray-600 font-medium mb-2 leading-relaxed bg-gray-50 p-3 rounded-2xl rounded-tl-none break-words">{c.message}</p>
                     {c.visibility === 'internal' ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded"><LockClosedIcon className="w-3 h-3" /> Internal</span>
                     ) : (
@@ -330,9 +329,9 @@ const TicketDetails = () => {
             )}
           </div>
 
-          <div className="p-6 border-t border-gray-50 bg-gray-50/50 mt-auto">
+          <div className="p-5 md:p-6 border-t border-gray-50 bg-gray-50/50 mt-auto">
             <form onSubmit={handleCommentSubmit}>
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                 <span className="text-sm font-bold text-gray-900">Add a comment</span>
                 {isStaff && (
                   <div className="flex items-center gap-2">
@@ -340,7 +339,7 @@ const TicketDetails = () => {
                     <button
                       type="button"
                       onClick={() => setVisibility(v => v === 'public' ? 'internal' : 'public')}
-                      className="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 transition-colors cursor-pointer"
+                      className="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 transition-colors cursor-pointer shrink-0"
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${visibility === 'internal' ? 'translate-x-4 bg-blue-500' : 'translate-x-1'}`} />
                     </button>
@@ -353,14 +352,14 @@ const TicketDetails = () => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Write a comment..."
-                  className="w-full bg-white border border-gray-200 rounded-2xl p-4 pr-16 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none resize-none min-h-[100px] shadow-sm mb-3"
+                  className="w-full bg-white border border-gray-200 rounded-2xl p-4 pr-14 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none resize-none min-h-[100px] shadow-sm mb-3"
                 />
                 <button
                   type="submit"
                   disabled={!comment.trim()}
                   className="absolute bottom-6 right-3 bg-blue-600 text-white p-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm transition"
                 >
-                  <PaperAirplaneIcon className="w-5 h-5" />
+                  <PaperAirplaneIcon className="w-5 h-5 shrink-0" />
                 </button>
               </div>
               <button
@@ -368,7 +367,7 @@ const TicketDetails = () => {
                 disabled={!comment.trim()}
                 className="w-full bg-blue-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm flex justify-center items-center gap-2 transition md:hidden"
               >
-                <PaperAirplaneIcon className="w-4 h-4" />
+                <PaperAirplaneIcon className="w-4 h-4 shrink-0" />
                 Post Comment
               </button>
             </form>

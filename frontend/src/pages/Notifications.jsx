@@ -1,40 +1,25 @@
-import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
-import { Link } from 'react-router-dom';
-import { BellIcon, CheckCircleIcon, TicketIcon } from '@heroicons/react/24/outline';
+import { useNotifications } from '../hooks/useNotifications';
+import { useNavigate } from 'react-router-dom';
+import { BellIcon, CheckCircleIcon, TicketIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 const Notifications = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const res = await api.get('/notifications');
-        setNotifications(res.data.data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchNotifications();
-  }, []);
-
-  const markAsRead = async (id) => {
-    try {
-      await api.patch(`/notifications/${id}/read`);
-      setNotifications(prev =>
-        prev.map(n => n._id === id ? { ...n, isRead: true } : n)
-      );
-    } catch (err) {
-      console.error(err);
+  const handleNotificationClick = (n) => {
+    // Automatically reduce the number (mark as read) when viewed
+    if (!n.isRead) {
+      markAsRead(n._id);
+    }
+    
+    // Navigate to the ticket if one exists
+    if (n.ticket) {
+      const ticketId = typeof n.ticket === 'object' ? n.ticket._id : n.ticket;
+      navigate(`/tickets/${ticketId}`);
     }
   };
-
-  if (loading) return <div className="text-center py-20 font-medium text-gray-500">Loading notifications...</div>;
 
   return (
     <div className="max-w-4xl pb-10">
@@ -43,10 +28,21 @@ const Notifications = () => {
           <h1 className="text-3xl font-black text-gray-900 mb-2">Notifications</h1>
           <p className="text-gray-500 text-sm font-medium">Stay updated with your ticket activities and account alerts.</p>
         </div>
-        <span className="bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2 w-max">
-          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-          {notifications.filter(n => !n.isRead).length} unread
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="bg-blue-50 text-blue-700 text-xs font-bold px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2 w-max">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            {unreadCount} unread
+          </span>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition flex items-center gap-2"
+            >
+              <CheckBadgeIcon className="w-4 h-4 text-gray-500" />
+              Mark all read
+            </button>
+          )}
+        </div>
       </div>
 
       {notifications.length === 0 ? (
@@ -62,15 +58,16 @@ const Notifications = () => {
           {notifications.map((n) => (
             <div
               key={n._id}
-              className={`flex items-start gap-4 p-4 md:p-5 rounded-2xl transition-all border-b border-gray-50 last:border-0 ${
-                n.isRead ? 'opacity-70 hover:bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-50/50'
+              onClick={() => handleNotificationClick(n)}
+              className={`flex items-start gap-3 md:gap-4 p-4 md:p-5 rounded-2xl transition-all border-b border-gray-50 last:border-0 cursor-pointer ${
+                n.isRead ? 'opacity-70 hover:bg-gray-50' : 'bg-blue-50/30 hover:bg-blue-50/50 hover:shadow-sm'
               }`}
             >
-              <div className={`p-3 rounded-full shrink-0 ${n.isRead ? 'bg-gray-100' : 'bg-blue-100 text-blue-600'}`}>
+              <div className={`p-2 md:p-3 rounded-full shrink-0 ${n.isRead ? 'bg-gray-100 text-gray-400' : 'bg-blue-100 text-blue-600'}`}>
                 {n.ticket ? <TicketIcon className="w-5 h-5" /> : <BellIcon className="w-5 h-5" />}
               </div>
-              
-              <div className="flex-1 min-w-0 mt-1">
+
+              <div className="flex-1 min-w-0 mt-0.5 md:mt-1">
                 <p className={`text-sm ${n.isRead ? 'text-gray-700 font-medium' : 'text-gray-900 font-bold'}`}>
                   {n.message}
                 </p>
@@ -79,21 +76,23 @@ const Notifications = () => {
                     {new Date(n.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {n.ticket && (
-                    <Link
-                      to={`/tickets/${n.ticket._id}`}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-800 transition bg-white px-2 py-1 rounded-md border border-gray-200 shadow-sm"
+                    <span
+                      className="text-[10px] md:text-xs font-bold text-blue-600 bg-white px-2 py-1 rounded-md border border-gray-200 shadow-sm whitespace-nowrap"
                     >
                       View Ticket &rarr;
-                    </Link>
+                    </span>
                   )}
                 </div>
               </div>
 
               {!n.isRead && (
                 <button
-                  onClick={() => markAsRead(n._id)}
-                  className="shrink-0 text-blue-500 hover:text-blue-700 p-2 bg-white rounded-full border border-blue-100 shadow-sm transition"
-                  title="Mark as read"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevents the click from triggering the navigation
+                    markAsRead(n._id);
+                  }}
+                  className="shrink-0 text-blue-500 hover:text-blue-700 p-1.5 md:p-2 bg-white rounded-full border border-blue-100 shadow-sm transition"
+                  title="Mark as read without viewing"
                 >
                   <CheckCircleIcon className="w-5 h-5" />
                 </button>
