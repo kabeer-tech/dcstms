@@ -8,15 +8,22 @@ export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [newTicketCount, setNewTicketCount] = useState(0); // Added for ticket icon
 
   const fetchNotifications = async () => {
     if (!user) return;
     try {
+      // 1. Fetch standard notifications (the bell icon)
       const res = await api.get('/notifications');
       const data = res.data.data || [];
       setNotifications(data);
-      // Count how many notifications are NOT marked as read
       setUnreadCount(data.filter((n) => !n.isRead).length);
+
+      // 2. Fetch 'Submitted' (New) tickets for Admin/Staff (the ticket icon)
+      if (user.role === 'admin' || user.role === 'staff') {
+        const ticketRes = await api.get('/tickets?status=submitted');
+        setNewTicketCount(ticketRes.data.data.length);
+      }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -24,8 +31,6 @@ export const NotificationProvider = ({ children }) => {
 
   useEffect(() => {
     fetchNotifications();
-    
-    // Auto-refresh notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [user]);
@@ -33,7 +38,7 @@ export const NotificationProvider = ({ children }) => {
   const markAsRead = async (id) => {
     try {
       await api.patch(`/notifications/${id}/read`);
-      fetchNotifications(); // Refresh the count
+      fetchNotifications();
     } catch (error) {
       console.error('Error marking as read:', error);
     }
@@ -42,25 +47,23 @@ export const NotificationProvider = ({ children }) => {
   const markAllAsRead = async () => {
     try {
       await api.patch('/notifications/read-all');
-      fetchNotifications(); // Refresh the count
+      fetchNotifications();
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
   };
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, newTicketCount, markAsRead, markAllAsRead, fetchNotifications }}>
       {children}
     </NotificationContext.Provider>
   );
 };
 
-// Custom hook to be used in Navbar, Sidebar, and BottomNav
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
-    // Failsafe empty state so the UI doesn't crash if the provider isn't wrapped yet
-    return { unreadCount: 0, notifications: [], markAsRead: () => {}, markAllAsRead: () => {} };
+    return { unreadCount: 0, newTicketCount: 0, notifications: [], markAsRead: () => {}, markAllAsRead: () => {} };
   }
   return context;
 };

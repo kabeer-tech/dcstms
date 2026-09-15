@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { MagnifyingGlassIcon, ChevronDownIcon, TagIcon, ClockIcon, FolderIcon, ArrowsUpDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, ChevronDownIcon, TagIcon, ClockIcon, FolderIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 
 const statusMap = {
   submitted: { label: 'Open', class: 'bg-blue-100 text-blue-700' },
@@ -41,6 +41,7 @@ const TicketList = () => {
 
   const filteredTickets = tickets.filter(t =>
     t.ticketNumber.toLowerCase().includes(search.toLowerCase()) ||
+    (t.title && t.title.toLowerCase().includes(search.toLowerCase())) ||
     t.description.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -85,7 +86,7 @@ const TicketList = () => {
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium shadow-sm transition"
           />
         </div>
-        
+
         <div className="flex gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
           {isStaff ? (
             <>
@@ -128,12 +129,24 @@ const TicketList = () => {
             const status = statusMap[ticket.status] || { label: ticket.status, class: 'bg-gray-100 text-gray-700' };
             const priority = priorityMap[ticket.priority] || { label: ticket.priority, class: 'text-gray-500 bg-gray-50 border border-gray-200' };
             
+            // Check if the current user's ID is in the readBy array
+            const isRead = ticket.readBy?.includes(user?._id || user?.id);
+
             return (
               <Link key={ticket._id} to={`/tickets/${ticket._id}`} className="block group">
-                <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6 hover:border-gray-300 hover:shadow-md transition-all h-full flex flex-col">
-                  
+                <div className={`rounded-[24px] border p-6 transition-all h-full flex flex-col relative ${
+                  isRead 
+                    ? 'bg-gray-50 border-gray-100 shadow-none hover:border-gray-300' 
+                    : 'bg-white border-blue-200 shadow-sm shadow-blue-100/50 hover:shadow-md hover:border-blue-300'
+                }`}>
+
                   <div className="flex justify-between items-start mb-5">
-                    <span className="font-black text-gray-900 text-lg">#{ticket.ticketNumber}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-gray-900 text-lg">#{ticket.ticketNumber}</span>
+                      {!isRead && (
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm" title="New Updates"></span>
+                      )}
+                    </div>
                     {isStaff ? (
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${priority.class}`}>
                         {priority.label}
@@ -148,30 +161,34 @@ const TicketList = () => {
                   {isStaff && ticket.student && (
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-100">
-                          {ticket.student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                        <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs border border-blue-100 shrink-0">
+                          {ticket.student.name === 'Anonymous Student' ? '?' : ticket.student.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{ticket.student.name}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{ticket.student.name}</p>
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wide">Requester</p>
                         </div>
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${status.class}`}>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${status.class} shrink-0`}>
                         {status.label}
                       </span>
                     </div>
                   )}
 
-                  <p className="text-sm text-gray-800 font-medium mb-6 line-clamp-2">
+                  <p className="text-base font-bold text-gray-900 mb-1 line-clamp-1">
+                    {ticket.title || 'Untitled Request'}
+                  </p>
+                  
+                  <p className={`text-sm font-medium mb-6 line-clamp-2 ${isRead ? 'text-gray-500' : 'text-gray-600'}`}>
                     {ticket.description}
                   </p>
 
-                  <div className="mt-auto flex justify-between items-center text-xs font-bold text-gray-400 border-t border-gray-50 pt-4">
-                    <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                  <div className="mt-auto flex justify-between items-center text-xs font-bold text-gray-400 border-t border-gray-100 pt-4">
+                    <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
                       <FolderIcon className="w-4 h-4" /> {ticket.department?.name || ticket.category}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <ClockIcon className="w-4 h-4" /> 
+                      <ClockIcon className="w-4 h-4" />
                       {ticket.createdAt === new Date().toISOString() ? `Today, ${new Date(ticket.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}` : new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                   </div>
@@ -184,7 +201,7 @@ const TicketList = () => {
                       <span className="text-red-700 underline underline-offset-2 hover:text-red-800">Assign</span>
                     </div>
                   )}
-                  
+
                 </div>
               </Link>
             );

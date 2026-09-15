@@ -9,3 +9,7 @@ router.post('/login', login);
 router.get('/me', protect, getMe);
 
 export default router;
+
+import { forgotPassword, resetPassword } from '../controllers/authController.js';
+router.post('/forgot-password', forgotPassword);
+router.patch('/reset-password/:token', resetPassword);

@@ -8,6 +8,7 @@ const TicketForm = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    title: '',
     ticketType: 'complaint',
     category: '',
     description: '',
@@ -46,7 +47,7 @@ const TicketForm = () => {
       <p className="text-gray-500 text-sm font-medium mb-8">Fill in the details below and our team will get back to you shortly.</p>
 
       <form onSubmit={handleSubmit} className="bg-white p-6 md:p-8 rounded-[32px] shadow-sm border border-gray-100 space-y-8">
-        
+
         <div>
           <label className="block text-sm font-bold text-gray-900 mb-3">Ticket Type</label>
           <div className="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100 w-full max-w-md">
@@ -69,6 +70,20 @@ const TicketForm = () => {
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-bold text-gray-900 mb-2">Subject / Title</label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Briefly summarize your request (e.g., Broken projector in Hall C)"
+            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-gray-900 shadow-sm"
+            required
+            maxLength={100}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2">Category</label>
@@ -84,11 +99,8 @@ const TicketForm = () => {
               <option value="Facilities">Facilities</option>
               <option value="Registrar">Registrar</option>
             </select>
-            <p className="text-xs text-red-500 font-bold mt-1.5 flex items-center gap-1">
-              <ExclamationCircleIcon className="w-3.5 h-3.5" /> Please select a category
-            </p>
           </div>
-          
+
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-3">Priority</label>
             <div className="flex gap-4">
@@ -129,9 +141,6 @@ const TicketForm = () => {
             required
             maxLength={500}
           />
-          <p className="text-xs text-red-500 font-bold mt-1.5 flex items-center gap-1">
-            <ExclamationCircleIcon className="w-3.5 h-3.5" /> Description is required
-          </p>
         </div>
 
         <div>

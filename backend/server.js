@@ -1,6 +1,6 @@
+import 'dotenv/config'; // <-- FIX: Loads .env variables before ANY other files!
 import dns from 'dns';
 import express from 'express';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -20,8 +20,6 @@ dns.setServers([
   '1.1.1.1'
 ]);
 
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -36,19 +34,15 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/departments', departmentRoutes); // FIXED: Added this missing line!
+app.use('/api/departments', departmentRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Server is running'
-  });
+  res.json({ status: 'OK', message: 'Server is running' });
 });
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('MongoDB connected');
-
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

@@ -2,23 +2,24 @@ import { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
-import { 
-  HomeIcon, 
-  TicketIcon, 
-  PlusIcon, 
-  BellIcon, 
+import {
+  HomeIcon,
+  TicketIcon,
+  PlusIcon,
+  BellIcon,
   ShieldCheckIcon,
   ArrowRightOnRectangleIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
-  Cog8ToothIcon
+  Cog8ToothIcon,
+  ChartPieIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { unreadCount = 0 } = useNotifications() || {};
-  
+  const { unreadCount = 0, newTicketCount = 0 } = useNotifications() || {};
+
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -39,11 +40,10 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
-    { name: 'Tickets', path: '/tickets', icon: TicketIcon },
-    // Show "New Ticket" for students and staff
+    { name: 'Tickets', path: '/tickets', icon: TicketIcon, count: newTicketCount },
     ...(user?.role === 'student' || user?.role === 'staff' ? [{ name: 'New ticket', path: '/tickets/new', icon: PlusIcon }] : []),
-    // Show Admin-specific links
     ...(user?.role === 'admin' ? [
+      { name: 'Analytics', path: '/analytics', icon: ChartPieIcon },
       { name: 'Users', path: '/users', icon: UserGroupIcon },
       { name: 'Departments', path: '/departments', icon: BuildingOfficeIcon }
     ] : []),
@@ -52,7 +52,7 @@ const Sidebar = () => {
 
   return (
     <aside className="hidden md:flex flex-col w-64 fixed inset-y-0 left-0 bg-white border-r border-gray-100 z-50">
-      
+
       <div className="flex items-center gap-3 px-6 h-20">
         <div className="bg-blue-600 p-2 rounded-xl shadow-sm shadow-blue-600/20">
           <ShieldCheckIcon className="w-5 h-5 text-white" strokeWidth={2.5} />
@@ -83,7 +83,7 @@ const Sidebar = () => {
                   {item.name}
                 </div>
                 {item.count > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] min-w-[20px] h-[20px] flex items-center justify-center px-1 rounded-full font-bold shadow-sm">
+                  <span className={`${item.name === 'Tickets' ? 'bg-orange-500' : 'bg-red-500'} text-white text-[10px] min-w-[20px] h-[20px] flex items-center justify-center px-1 rounded-full font-bold shadow-sm`}>
                     {item.count > 9 ? '9+' : item.count}
                   </span>
                 )}
@@ -94,16 +94,14 @@ const Sidebar = () => {
       </div>
 
       <div className="p-4 mt-auto relative" ref={dropdownRef}>
-        
-        {/* Floating Menu */}
         {showDropdown && (
           <div className="absolute bottom-[calc(100%-10px)] left-4 right-4 bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl overflow-hidden z-50 py-1">
             <div className="px-4 py-3 border-b border-gray-50 mb-1 bg-gray-50/50">
               <p className="text-sm font-bold text-gray-900 truncate">{user?.name}</p>
               <p className="text-xs font-medium text-gray-500 truncate">{user?.email}</p>
             </div>
-            
-            <Link 
+
+            <Link
               to="/profile"
               onClick={() => setShowDropdown(false)}
               className="w-full text-left px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition"
@@ -111,8 +109,8 @@ const Sidebar = () => {
               <Cog8ToothIcon className="w-5 h-5 text-gray-400" />
               Profile & Settings
             </Link>
-            
-            <button 
+
+            <button
               onClick={handleLogout}
               className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2 transition"
             >
@@ -122,8 +120,7 @@ const Sidebar = () => {
           </div>
         )}
 
-        {/* User Profile Trigger Button */}
-        <div 
+        <div
           onClick={() => setShowDropdown(!showDropdown)}
           className={`bg-white rounded-[20px] p-3 flex items-center justify-between border shadow-sm cursor-pointer transition ${showDropdown ? 'border-blue-300 ring-4 ring-blue-50' : 'border-gray-100 hover:bg-gray-50 hover:border-gray-200'}`}
         >

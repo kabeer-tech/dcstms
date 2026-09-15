@@ -143,7 +143,9 @@ const TicketDetails = () => {
             </span>
           </div>
         </div>
-        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 break-words">{ticket.description.split('.')[0]}...</h2>
+        <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 break-words">
+          {ticket.title || `${ticket.description.split('.')[0]}...`}
+        </h2>
         <div className="flex flex-wrap gap-2">
           <span className="flex items-center gap-1.5 bg-white text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
             <TagIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {ticket.ticketType === 'complaint' ? 'Bug Report' : 'Service'}
@@ -156,6 +158,7 @@ const TicketDetails = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
         
+        {/* Left Column: Details & Actions */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="flex flex-wrap justify-between items-center gap-2 p-5 md:p-6 border-b border-gray-50">
@@ -295,6 +298,7 @@ const TicketDetails = () => {
           )}
         </div>
 
+        {/* Right Column: Comments */}
         <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[600px] lg:h-[calc(100vh-140px)] lg:sticky lg:top-24">
           <div className="flex justify-between items-center p-5 md:p-6 border-b border-gray-50">
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">

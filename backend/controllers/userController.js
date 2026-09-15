@@ -1,9 +1,9 @@
 import User from '../models/User.js';
-import { logAction } from '../services/auditService.js';
 
+// 1. Get all users (Admin only)
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-password').populate('department', 'name');
+    const users = await User.find().select('-passwordHash').populate('department', 'name');
     res.json({ success: true, data: users });
   } catch (error) {
     console.error('Get users error:', error);
@@ -11,28 +11,17 @@ export const getUsers = async (req, res) => {
   }
 };
 
+// 2. Update user role (Admin only)
 export const updateUserRole = async (req, res) => {
   try {
-    const { role } = req.body;
-    
-    // Prevent admin from locking themselves out by changing their own role
-    if (req.params.id === req.user.id) {
-      return res.status(400).json({ success: false, message: 'You cannot change your own role.' });
-    }
-
+    const { role, department } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    const oldRole = user.role;
-    user.role = role;
+    if (role) user.role = role;
+    if (department !== undefined) user.department = department || null;
+
     await user.save();
-
-    await logAction({
-      actor: req.user._id,
-      action: 'USER_ROLE_UPDATED',
-      details: { target: user._id, from: oldRole, to: role },
-    });
-
     res.json({ success: true, data: user });
   } catch (error) {
     console.error('Update role error:', error);
@@ -40,13 +29,22 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
+// 3. Delete user (Admin only)
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 4. Get staff (For assigning tickets)
 export const getStaff = async (req, res) => {
   try {
-    // Include both staff and admins so tickets can be assigned to either
-    const staff = await User.find({ role: { $in: ['staff', 'admin'] } })
-      .select('name email department')
-      .populate('department', 'name');
-      
+    const staff = await User.find({ role: { $in: ['staff', 'admin'] } }).select('-passwordHash');
     res.json({ success: true, data: staff });
   } catch (error) {
     console.error('Get staff error:', error);
@@ -54,28 +52,26 @@ export const getStaff = async (req, res) => {
   }
 };
 
-export const deleteUser = async (req, res) => {
+// 5. Update Profile (Current logged-in user)
+export const updateProfile = async (req, res) => {
   try {
-    // Prevent an admin from deleting themselves
-    if (req.params.id === req.user.id) {
-      return res.status(400).json({ success: false, message: 'You cannot delete your own account.' });
-    }
-
-    const user = await User.findByIdAndDelete(req.params.id);
+    const { name, department, matricNoOrStaffId, level, avatar } = req.body;
     
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    await logAction({
-      actor: req.user._id,
-      action: 'USER_DELETED',
-      details: { target: req.params.id, email: user.email },
-    });
+    if (name) user.name = name;
+    if (department) user.department = department;
+    if (matricNoOrStaffId) user.matricNoOrStaffId = matricNoOrStaffId;
+    if (level) user.level = level;
+    if (avatar !== undefined) user.avatar = avatar; 
 
-    res.json({ success: true, message: 'User deleted successfully' });
+    await user.save();
+    
+    const updatedUser = await User.findById(user._id).populate('department', 'name').select('-passwordHash');
+    res.json({ success: true, data: updatedUser });
   } catch (error) {
-    console.error('Delete user error:', error);
+    console.error('Update profile error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

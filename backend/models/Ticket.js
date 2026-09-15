@@ -2,23 +2,25 @@ import mongoose from 'mongoose';
 
 const ticketSchema = new mongoose.Schema({
   ticketNumber: { type: String, unique: true, index: true },
-  ticketType: { 
-    type: String, 
-    enum: ['complaint', 'service_request'], 
-    required: true 
+  title: { type: String, required: true, trim: true },
+  ticketType: {
+    type: String,
+    enum: ['complaint', 'service_request'],
+    required: true
   },
   student: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   category: { type: String, required: true },
   description: { type: String, required: true, minlength: 10 },
-  status: { 
-    type: String, 
-    enum: ['submitted', 'in_review', 'escalated', 'resolved', 'closed'], 
-    default: 'submitted' 
+  status: {
+    type: String,
+    enum: ['submitted', 'in_review', 'escalated', 'resolved', 'closed'],
+    default: 'submitted'
   },
   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
   isAnonymous: { type: Boolean, default: false },
+  readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Tracking who has viewed this
   attachments: [{
     fileName: String,
     fileUrl: String,

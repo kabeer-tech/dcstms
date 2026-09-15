@@ -6,6 +6,8 @@ import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import TicketList from './pages/TicketList';
@@ -15,6 +17,7 @@ import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
+import Analytics from './pages/Analytics';
 
 function App() {
   return (
@@ -24,6 +27,8 @@ function App() {
           <div className="min-h-screen bg-gray-50/50 font-sans text-gray-900 overflow-x-hidden max-w-[100vw]">
             <Routes>
               <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/register" element={<Register />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
@@ -46,6 +51,7 @@ function App() {
                               
                               <Route path="/users" element={<Users />} />
                               <Route path="/departments" element={<Departments />} />
+                              <Route path="/analytics" element={<Analytics />} />
                             </Routes>
                           </div>
                         </main>

@@ -60,7 +60,11 @@ const Dashboard = () => {
 
   const priorityQueue = tickets
     .filter(t => t.status !== 'resolved' && t.status !== 'closed')
-    .filter(t => t.ticketNumber.toLowerCase().includes(search.toLowerCase()) || t.description.toLowerCase().includes(search.toLowerCase()))
+    .filter(t => 
+      t.ticketNumber.toLowerCase().includes(search.toLowerCase()) || 
+      (t.title && t.title.toLowerCase().includes(search.toLowerCase())) || 
+      (t.description && t.description.toLowerCase().includes(search.toLowerCase()))
+    )
     .sort((a, b) => {
       const p = { urgent: 4, high: 3, medium: 2, low: 1 };
       return (p[b.priority] || 0) - (p[a.priority] || 0);
@@ -161,7 +165,7 @@ const Dashboard = () => {
                       </div>
                       <div className="flex flex-col min-w-0 flex-1">
                         <span className="text-sm font-bold text-gray-900 truncate">#{ticket.ticketNumber}</span>
-                        <span className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.description}</span>
+                        <span className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.title || ticket.description}</span>
                       </div>
                     </div>
                     <ChevronRightIcon className="w-5 h-5 text-gray-300 shrink-0 group-hover:text-blue-500 transition-colors" />
@@ -288,7 +292,7 @@ const Dashboard = () => {
                   <p className="text-sm font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                     Ticket #{ticket.ticketNumber}
                   </p>
-                  <p className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.description}</p>
+                  <p className="text-xs font-medium text-gray-500 truncate mt-0.5">{ticket.title || ticket.description}</p>
                 </div>
                 <div className="text-xs font-bold text-gray-400 whitespace-nowrap ml-2 md:ml-4 shrink-0">
                   {new Date(ticket.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}

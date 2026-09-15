@@ -1,12 +1,11 @@
 import express from 'express';
-import { protect, restrictTo } from '../middleware/auth.js';
 import { getAnalytics } from '../controllers/analyticsController.js';
+import { protect, restrictTo } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Only Staff and Admin can view analytics
 router.use(protect);
-router.use(restrictTo('staff', 'admin'));
-
-router.get('/', getAnalytics);
+router.get('/', restrictTo('admin', 'staff'), getAnalytics);
 
 export default router;
