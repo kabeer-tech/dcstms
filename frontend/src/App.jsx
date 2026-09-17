@@ -18,6 +18,8 @@ import Profile from './pages/Profile';
 import Users from './pages/Users';
 import Departments from './pages/Departments';
 import Analytics from './pages/Analytics';
+import FAQ from './pages/FAQ';
+import ManageFAQs from './pages/ManageFAQs';
 
 function App() {
   return (
@@ -27,8 +29,8 @@ function App() {
           <div className="min-h-screen bg-gray-50/50 font-sans text-gray-900 overflow-x-hidden max-w-[100vw]">
             <Routes>
               <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
               <Route path="/register" element={<Register />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Navigate to="/dashboard" />} />
@@ -49,6 +51,10 @@ function App() {
                               <Route path="/notifications" element={<Notifications />} />
                               <Route path="/profile" element={<Profile />} />
                               
+                              {/* FAQ Routes Added Here */}
+                              <Route path="/faqs" element={<FAQ />} />
+                              <Route path="/faqs/manage" element={<ManageFAQs />} />
+
                               <Route path="/users" element={<Users />} />
                               <Route path="/departments" element={<Departments />} />
                               <Route path="/analytics" element={<Analytics />} />

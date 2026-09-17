@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -30,12 +30,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-md w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-8">
+        
+        {/* Updated Header matching your original UI */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md shadow-blue-600/20">
-            <ShieldCheckIcon className="w-8 h-8 text-white" strokeWidth={2.5} />
-          </div>
-          <h1 className="text-2xl font-black text-gray-900 mb-2">Welcome to DCSTMS</h1>
-          <p className="text-sm font-medium text-gray-500">Sign in to your account</p>
+          <h2 className="text-2xl font-black text-blue-600 tracking-tight">DCSTMS</h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Ticket Management System</p>
+          
+          <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome Back</h1>
+          <p className="text-sm font-medium text-gray-500">Sign in to continue to your workspace</p>
         </div>
 
         {error && (
@@ -103,11 +105,25 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full bg-blue-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm transition mt-2"
+            className="w-full bg-blue-600 text-white font-bold text-sm py-3.5 rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-sm transition mt-2 flex items-center justify-center gap-2"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Logging in...' : (
+              <>
+                Log in <span aria-hidden="true">&rarr;</span>
+              </>
+            )}
           </button>
         </form>
+
+        {/* Missing Registration Link Added Here */}
+        <div className="mt-8 text-center border-t border-gray-50 pt-6">
+          <p className="text-sm font-medium text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/register" className="font-bold text-blue-600 hover:text-blue-800 transition">
+              Create one now
+            </Link>
+          </p>
+        </div>
 
       </div>
     </div>

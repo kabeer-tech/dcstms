@@ -12,7 +12,8 @@ import {
   UserGroupIcon,
   BuildingOfficeIcon,
   Cog8ToothIcon,
-  ChartPieIcon
+  ChartPieIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -41,12 +42,26 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
     { name: 'Tickets', path: '/tickets', icon: TicketIcon, count: newTicketCount },
-    ...(user?.role === 'student' || user?.role === 'staff' ? [{ name: 'New ticket', path: '/tickets/new', icon: PlusIcon }] : []),
+    
+    // Student-specific menu
+    ...(user?.role === 'student' ? [
+      { name: 'New ticket', path: '/tickets/new', icon: PlusIcon },
+      { name: 'FAQs', path: '/faqs', icon: QuestionMarkCircleIcon }
+    ] : []),
+    
+    // Staff-specific menu
+    ...(user?.role === 'staff' ? [
+      { name: 'Answer FAQs', path: '/faqs/manage', icon: QuestionMarkCircleIcon }
+    ] : []),
+    
+    // Admin-specific menu
     ...(user?.role === 'admin' ? [
       { name: 'Analytics', path: '/analytics', icon: ChartPieIcon },
       { name: 'Users', path: '/users', icon: UserGroupIcon },
-      { name: 'Departments', path: '/departments', icon: BuildingOfficeIcon }
+      { name: 'Departments', path: '/departments', icon: BuildingOfficeIcon },
+      { name: 'Manage FAQs', path: '/faqs/manage', icon: QuestionMarkCircleIcon }
     ] : []),
+    
     { name: 'Notifications', path: '/notifications', icon: BellIcon, count: unreadCount },
   ];
 
