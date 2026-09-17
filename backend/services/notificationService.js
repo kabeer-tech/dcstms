@@ -1,5 +1,10 @@
 import Notification from '../models/Notification.js';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// CRITICAL FIX: Force Node.js to prefer IPv4 for DNS resolution.
+// This bypasses the Render IPv6 ENETUNREACH block for external SMTP servers.
+dns.setDefaultResultOrder('ipv4first');
 
 // In-app notification
 export const createNotification = async ({ recipient, ticket, message }) => {
@@ -17,17 +22,17 @@ if (process.env.SMTP_USER && process.env.SMTP_PASS) {
   try {
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: 465, // Force 465 (Secure) to bypass Render IPv6 timeouts on 587
+      port: 465,
       secure: true, 
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       },
       tls: {
-        rejectUnauthorized: false // Prevents certificate chain issues on cloud hosts
+        rejectUnauthorized: false
       }
     });
-    console.log('✅ Email service configured (Port 465 Secure)');
+    console.log('✅ Email service configured (IPv4 forced / Port 465)');
   } catch (error) {
     console.error('Email configuration error:', error.message);
   }
@@ -57,10 +62,8 @@ export const sendEmail = async ({ to, subject, text }) => {
 
 // Combined notification: in-app + email
 export const notifyUser = async ({ recipient, ticket, message, emailSubject }) => {
-  // In-app notification (always)
   const notification = await createNotification({ recipient, ticket, message });
 
-  // Email notification (if configured)
   if (recipient.email && transporter) {
     await sendEmail({
       to: recipient.email,
