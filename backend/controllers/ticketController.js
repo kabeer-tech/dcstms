@@ -124,14 +124,13 @@ export const getTicketById = async (req, res) => {
       }
     }
 
-    // MARK TICKET AS VIEWED BY THIS USER
     if (!ticket.readBy.includes(req.user._id)) {
       ticket.readBy.push(req.user._id);
       await ticket.save();
     }
 
     const ticketObj = ticket.toObject();
-    
+
     if (ticketObj.isAnonymous && req.user.role !== 'admin' && ticketObj.student._id.toString() !== req.user._id.toString()) {
       ticketObj.student = { _id: ticketObj.student._id, name: 'Anonymous Student', email: 'Hidden' };
     }
@@ -172,7 +171,6 @@ export const updateTicketStatus = async (req, res) => {
       isModified = true;
     }
 
-    // RESET READ STATUS IF UPDATED
     if (isModified) {
       ticket.readBy = [req.user._id];
     }
@@ -189,11 +187,23 @@ export const updateTicketStatus = async (req, res) => {
 
       const student = await User.findById(ticket.student);
       if (student) {
+        let message = `Your ticket ${ticket.ticketNumber} status changed from ${oldStatus} to ${status}.`;
+        let emailSubject = 'Ticket Status Update';
+
+        // Custom alerts for resolved and closed states
+        if (status === 'resolved') {
+          message = `Good news! Your ticket ${ticket.ticketNumber} has been marked as RESOLVED. Please check your portal for the final resolution summary.`;
+          emailSubject = `Ticket Resolved: ${ticket.ticketNumber}`;
+        } else if (status === 'closed') {
+          message = `Your ticket ${ticket.ticketNumber} has been officially CLOSED. If you still have issues, please submit a new ticket.`;
+          emailSubject = `Ticket Closed: ${ticket.ticketNumber}`;
+        }
+
         await notifyUser({
           recipient: student,
           ticket: ticket._id,
-          message: `Your ticket ${ticket.ticketNumber} status changed from ${oldStatus} to ${status}`,
-          emailSubject: 'Ticket Status Update'
+          message: message,
+          emailSubject: emailSubject
         });
       }
     }

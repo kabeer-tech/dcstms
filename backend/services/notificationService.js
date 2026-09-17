@@ -13,18 +13,21 @@ export const createNotification = async ({ recipient, ticket, message }) => {
 // Email notification
 let transporter = null;
 
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
   try {
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: 465, // Force 465 (Secure) to bypass Render IPv6 timeouts on 587
+      secure: true, 
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
+      },
+      tls: {
+        rejectUnauthorized: false // Prevents certificate chain issues on cloud hosts
       }
     });
-    console.log('✅ Email service configured');
+    console.log('✅ Email service configured (Port 465 Secure)');
   } catch (error) {
     console.error('Email configuration error:', error.message);
   }
@@ -56,7 +59,7 @@ export const sendEmail = async ({ to, subject, text }) => {
 export const notifyUser = async ({ recipient, ticket, message, emailSubject }) => {
   // In-app notification (always)
   const notification = await createNotification({ recipient, ticket, message });
-  
+
   // Email notification (if configured)
   if (recipient.email && transporter) {
     await sendEmail({
@@ -65,6 +68,6 @@ export const notifyUser = async ({ recipient, ticket, message, emailSubject }) =
       text: message
     });
   }
-  
+
   return notification;
 };
